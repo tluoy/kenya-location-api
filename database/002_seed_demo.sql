@@ -1,0 +1,1 @@
+-- Real administrative boundaries are loaded by the ingestion service.

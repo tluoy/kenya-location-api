@@ -1,0 +1,45 @@
+services:
+  db:
+    image: postgis/postgis:17-3.5
+    environment:
+      POSTGRES_DB: kenya_location
+      POSTGRES_USER: location
+      POSTGRES_PASSWORD: REMOVED_CREDENTIAL
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./database/001_schema.sql:/docker-entrypoint-initdb.d/001_schema.sql:ro
+      - ./database/002_seed_demo.sql:/docker-entrypoint-initdb.d/002_seed_demo.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U location -d kenya_location"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  ingestion:
+    build: ./ingestion
+    environment:
+      DATABASE_URL: postgresql://location:REMOVED_CREDENTIAL@db:5432/kenya_location
+    volumes:
+      - ./data/gis:/data/gis
+      - ./data/places:/data/places
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: "no"
+
+  api:
+    build: ./src/KenyaLocation.Api
+    environment:
+      ConnectionStrings__Postgres: Host=db;Port=5432;Database=kenya_location;Username=location;Password=REMOVED_CREDENTIAL
+    ports:
+      - "8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+      ingestion:
+        condition: service_completed_successfully
+
+volumes:
+  pgdata:

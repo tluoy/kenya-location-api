@@ -1,0 +1,44 @@
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# .NET
+**/bin/
+**/obj/
+*.user
+*.suo
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+env/
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# Docker / runtime
+docker-compose.override.yml
+
+# Local database/runtime data
+pgdata/
+*.log
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Test / coverage output
+TestResults/
+coverage/
+.coverage
+
+# Generated local artifacts
+*.zip
