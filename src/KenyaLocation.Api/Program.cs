@@ -8,10 +8,17 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-builder.Services.AddSingleton(sp => new NpgsqlDataSourceBuilder(
-    builder.Configuration.GetConnectionString("Postgres") ??
-    "Host=localhost;Port=5432;Database=kenya_location;Username=location;Password=REMOVED_CREDENTIAL")
-    .Build());
+builder.Services.AddSingleton(sp =>
+{
+    var connectionString = builder.Configuration.GetConnectionString("Postgres");
+
+    if (string.IsNullOrWhiteSpace(connectionString))
+    {
+        throw new InvalidOperationException("Postgres connection string is not configured.");
+    }
+
+    return new NpgsqlDataSourceBuilder(connectionString).Build();
+});
 
 var app = builder.Build();
 
@@ -41,10 +48,7 @@ app.MapGet("/health", async (NpgsqlDataSource db) =>
 app.MapGet("/api/v1/meta", async (NpgsqlDataSource db) =>
 {
     const string sql = """
-        SELECT
-            level,
-            level_name,
-            count(*) AS count
+        SELECT level, level_name, count(*) AS count
         FROM admin_units
         GROUP BY level, level_name
         ORDER BY level

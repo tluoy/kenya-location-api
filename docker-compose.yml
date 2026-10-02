@@ -4,7 +4,7 @@ services:
     environment:
       POSTGRES_DB: kenya_location
       POSTGRES_USER: location
-      POSTGRES_PASSWORD: REMOVED_CREDENTIAL
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
       - "5432:5432"
     volumes:
@@ -20,7 +20,7 @@ services:
   ingestion:
     build: ./ingestion
     environment:
-      DATABASE_URL: postgresql://location:REMOVED_CREDENTIAL@db:5432/kenya_location
+      DATABASE_URL: postgresql://location:${POSTGRES_PASSWORD}@db:5432/kenya_location
     volumes:
       - ./data/gis:/data/gis
       - ./data/places:/data/places
@@ -32,7 +32,7 @@ services:
   api:
     build: ./src/KenyaLocation.Api
     environment:
-      ConnectionStrings__Postgres: Host=db;Port=5432;Database=kenya_location;Username=location;Password=REMOVED_CREDENTIAL
+      ConnectionStrings__Postgres: Host=db;Port=5432;Database=kenya_location;Username=location;Password=${POSTGRES_PASSWORD}
     ports:
       - "8080:8080"
     depends_on:

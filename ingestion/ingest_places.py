@@ -9,10 +9,10 @@ import psycopg
 from psycopg.types.json import Json
 
 
-DB = os.getenv(
-    "DATABASE_URL",
-    "postgresql://location:REMOVED_CREDENTIAL@db:5432/kenya_location"
-)
+DB = os.getenv("DATABASE_URL")
+
+if not DB:
+    raise RuntimeError("DATABASE_URL is not configured.")
 
 SOURCE_ZIP = Path("/data/places/13308773.zip")
 SOURCE = "Kenya Urban Centres 2019"

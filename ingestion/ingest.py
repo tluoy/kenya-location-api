@@ -22,10 +22,10 @@ except ImportError as exc:  # pragma: no cover - dependency validation
     ) from exc
 
 
-DB = os.getenv(
-    "DATABASE_URL",
-    "postgresql://location:REMOVED_CREDENTIAL@db:5432/kenya_location",
-)
+DB = os.getenv("DATABASE_URL")
+
+if not DB:
+    raise RuntimeError("DATABASE_URL is not configured.")
 
 GIS_ROOT = Path(os.getenv("GIS_ROOT", "/data/gis"))
 
