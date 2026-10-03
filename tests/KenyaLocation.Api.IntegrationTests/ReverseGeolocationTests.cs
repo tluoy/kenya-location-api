@@ -12,7 +12,8 @@ public class ReverseGeolocationTests : IntegrationTestBase
         const double longitude = 34.751392720669116;
 
         var response = await Client.GetAsync(
-            $"/api/v1/geolocation/reverse?latitude={latitude}&longitude={longitude}");
+            FormattableString.Invariant(
+                $"/api/v1/geolocation/reverse?latitude={latitude}&longitude={longitude}"));
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
