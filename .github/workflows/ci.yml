@@ -50,6 +50,10 @@ jobs:
         env:
           POSTGRES_PASSWORD: ci-test-password
 
+      - name: Check ingestion service logs
+        if: failure()
+        run: docker compose logs ingestion
+
       - name: Run integration tests
         run: dotnet test tests/KenyaLocation.Api.IntegrationTests/KenyaLocation.Api.IntegrationTests.csproj --configuration Release --no-restore
         env:
