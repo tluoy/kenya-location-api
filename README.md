@@ -47,6 +47,18 @@ Then open:
 
 The database starts with PostGIS. The ingestion service downloads the boundary repository and imports available `Adm1` … `Adm6` shapefiles. It also imports county/sub-county/ward coordinate reference data from Open Admin Data where useful.
 
+### Database initialization
+
+The database schema is initialized from the SQL files in `database/` when PostgreSQL creates a new data volume:
+
+- `001_schema.sql` — core administrative-unit schema
+- `002_seed_demo.sql` — seed/bootstrap placeholder
+- `003_places_schema.sql` — places schema
+
+These files are **initialization scripts, not migrations**. PostgreSQL does not re-run `/docker-entrypoint-initdb.d/` scripts when an existing `pgdata` volume is reused.
+
+When the database schema evolves after the MVP baseline, the change must be introduced through an explicit migration/upgrade step rather than by adding another initialization script and assuming existing databases will apply it automatically.
+
 ## API examples
 
 ```bash

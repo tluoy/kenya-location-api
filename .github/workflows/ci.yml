@@ -1,0 +1,72 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - develop
+      - main
+
+  pull_request:
+    branches:
+      - develop
+      - main
+      
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+
+      - name: Download urban areas dataset
+        run: |
+          mkdir -p data/places
+          curl -L https://api.figshare.com/v2/articles/13308773/download -o data/places/13308773.zip
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Restore
+        run: |
+          dotnet restore src/KenyaLocation.Api/KenyaLocation.Api.csproj
+          dotnet restore tests/KenyaLocation.Api.IntegrationTests/KenyaLocation.Api.IntegrationTests.csproj
+
+      - name: Build API
+        run: dotnet build src/KenyaLocation.Api/KenyaLocation.Api.csproj --configuration Release --no-restore
+
+      - name: Build API Docker image
+        run: docker build -t kenya-location-api:ci ./src/KenyaLocation.Api
+
+      - name: Build ingestion Docker image
+        run: docker build -t kenya-location-ingestion:ci ./ingestion
+
+      - name: Start application stack
+        run: docker compose up -d
+        env:
+          POSTGRES_PASSWORD: ci-test-password
+
+      - name: Wait for API
+        run: |
+          for attempt in {1..30}; do
+            if curl --fail --silent --output /dev/null --max-time 2 http://localhost:8080/health; then
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "API did not become healthy after 30 attempts" >&2
+          exit 1
+
+      - name: Check ingestion service logs
+        if: failure()
+        run: docker compose logs ingestion
+
+      - name: Run integration tests
+        run: dotnet test tests/KenyaLocation.Api.IntegrationTests/KenyaLocation.Api.IntegrationTests.csproj --configuration Release --no-restore
+        env:
+          API_BASE_URL: http://localhost:8080
+
