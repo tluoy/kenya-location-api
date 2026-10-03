@@ -1,0 +1,37 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - develop
+      - main
+
+  pull_request:
+    branches:
+      - develop
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Restore
+        run: dotnet restore src/KenyaLocation.Api/KenyaLocation.Api.csproj
+
+      - name: Build API
+        run: dotnet build src/KenyaLocation.Api/KenyaLocation.Api.csproj --configuration Release --no-restore
+
+      - name: Build API Docker image
+        run: docker build -t kenya-location-api:ci ./src/KenyaLocation.Api
+
+      - name: Build ingestion Docker image
+        run: docker build -t kenya-location-ingestion:ci ./ingestion
