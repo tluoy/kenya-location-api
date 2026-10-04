@@ -22,6 +22,8 @@ services:
     build: ./ingestion
     environment:
       DATABASE_URL: postgresql://location:${POSTGRES_PASSWORD}@db:5432/kenya_location
+      GIS_ROOT: /data/gis
+      PLACES_SOURCE_ZIP: /data/places/13308773.zip
     volumes:
       - ./data/gis:/data/gis
       - ./data/places:/data/places
