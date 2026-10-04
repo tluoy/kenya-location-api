@@ -33,7 +33,7 @@ services:
     restart: "no"
 
   api:
-    build: ./src/KenyaLocation.Api
+    build: .
     environment:
       ConnectionStrings__Postgres: Host=db;Port=5432;Database=kenya_location;Username=location;Password=${POSTGRES_PASSWORD}
     ports:

@@ -40,7 +40,7 @@ jobs:
         run: dotnet build src/KenyaLocation.Api/KenyaLocation.Api.csproj --configuration Release --no-restore
 
       - name: Build API Docker image
-        run: docker build -t kenya-location-api:ci ./src/KenyaLocation.Api
+        run: docker build -t kenya-location-api:ci .
 
       - name: Build ingestion Docker image
         run: docker build -t kenya-location-ingestion:ci ./ingestion
