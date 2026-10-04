@@ -15,3 +15,8 @@ param appName string = 'kenya-location-api'
 param environment string = 'dev'
 
 var resourcePrefix = '${appName}-${environment}'
+
+resource containerAppsEnvironment 'Microsoft.App/managedEnvironments@2025-01-01' = {
+  name: '${resourcePrefix}-env'
+  location: location
+}
