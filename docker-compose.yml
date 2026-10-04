@@ -33,7 +33,9 @@ services:
     restart: "no"
 
   api:
-    build: .
+    build:
+      context: .
+      dockerfile: ./src/KenyaLocation.Api/Dockerfile
     environment:
       ConnectionStrings__Postgres: Host=db;Port=5432;Database=kenya_location;Username=location;Password=${POSTGRES_PASSWORD}
     ports:
