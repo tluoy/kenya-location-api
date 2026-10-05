@@ -42,3 +42,4 @@ coverage/
 
 # Generated local artifacts
 *.zip
+deploy/azure/*.local.bicepparam
