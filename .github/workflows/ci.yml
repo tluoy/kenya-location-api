@@ -43,7 +43,7 @@ jobs:
         run: docker build -f src/KenyaLocation.Api/Dockerfile -t kenya-location-api:ci .
 
       - name: Build ingestion Docker image
-        run: docker build -f ingestion/Dockerfile -t kenya-location-ingestion:ci .
+        run: docker build -t kenya-location-ingestion:ci ./ingestion
 
       - name: Start application stack
         run: docker compose up -d
