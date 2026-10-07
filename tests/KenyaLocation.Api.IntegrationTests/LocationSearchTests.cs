@@ -31,4 +31,20 @@ public class LocationSearchTests : IntegrationTestBase
                     "Kakamega",
                     StringComparison.OrdinalIgnoreCase));
     }
+
+    [Fact]
+    public async Task Search_UnknownLocation_ReturnsEmptyArray()
+    {
+        var response = await Client.GetAsync(
+            "/api/v1/locations/search?q=THIS_LOCATION_DOES_NOT_EXIST");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        var json = await response.Content.ReadAsStringAsync();
+
+        using var document = JsonDocument.Parse(json);
+
+        Assert.Equal(JsonValueKind.Array, document.RootElement.ValueKind);
+        Assert.Empty(document.RootElement.EnumerateArray());
+    }
 }

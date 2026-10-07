@@ -1,3 +1,4 @@
+import download_sources
 import ingest
 import ingest_places
 
@@ -6,6 +7,11 @@ if __name__ == "__main__":
     print("========================================")
     print("KENYA LOCATION DATA INGESTION")
     print("========================================")
+
+    print()
+    print("0. Source datasets")
+    print("----------------------------------------")
+    download_sources.download_sources()
 
     print()
     print("1. Administrative boundaries")

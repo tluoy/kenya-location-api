@@ -45,7 +45,9 @@ Then open:
 - Swagger: http://localhost:8080/swagger
 - Health: http://localhost:8080/health
 
-The database starts with PostGIS. The ingestion service downloads the boundary repository and imports available `Adm1` … `Adm6` shapefiles. It also imports county/sub-county/ward coordinate reference data from Open Admin Data where useful.
+The database starts with PostGIS. Docker Compose runs the local PostgreSQL/PostGIS database, ingestion service, and API.
+
+The local ingestion service uses GIS and places source files mounted from the repository's `data/` directory. Azure uses a separate ingestion workflow where source files are stored in Azure Blob Storage and consumed by an Azure Container Apps Job.
 
 ### Database initialization
 
@@ -58,6 +60,16 @@ The database schema is initialized from the SQL files in `database/` when Postgr
 These files are **initialization scripts, not migrations**. PostgreSQL does not re-run `/docker-entrypoint-initdb.d/` scripts when an existing `pgdata` volume is reused.
 
 When the database schema evolves after the MVP baseline, the change must be introduced through an explicit migration/upgrade step rather than by adding another initialization script and assuming existing databases will apply it automatically.
+
+## Development and deployment workflows
+
+### Local development
+
+The recommended local runtime is Docker Compose:
+
+```bash
+docker compose up -d --build
+```
 
 ## API examples
 
@@ -72,7 +84,7 @@ curl 'http://localhost:8080/api/v1/locations/counties'
 ## Architecture
 
 ```text
-Browser / Mobile / Future Funeral App / Future Barter App
+                 Browser / Mobile 
                          |
                          v
                  ASP.NET Core API

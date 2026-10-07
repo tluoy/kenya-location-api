@@ -6,4 +6,5 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY ingest.py .
 COPY ingest_places.py .
 COPY run_ingestion.py .
+COPY download_sources.py .
 ENTRYPOINT ["python", "run_ingestion.py"]

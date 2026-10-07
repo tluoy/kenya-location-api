@@ -1,3 +1,5 @@
+using System.Text.Json;
+
 namespace KenyaLocation.Api.Models;
 
 public sealed record PlaceDetailResponse(
@@ -6,7 +8,7 @@ public sealed record PlaceDetailResponse(
     string PlaceType,
     double Latitude,
     double Longitude,
-    object Geometry,
+    JsonElement Geometry,
     string? WardId,
     string? Ward,
     string? SubCountyId,

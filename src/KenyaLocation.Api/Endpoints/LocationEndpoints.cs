@@ -2,6 +2,8 @@ using Npgsql;
 using KenyaLocation.Api.Models;
 using KenyaLocation.Api.Database;
 using System.Text.Json;
+using Microsoft.AspNetCore.Mvc;
+using System.ComponentModel;
 
 namespace KenyaLocation.Api.Endpoints;
 
@@ -37,12 +39,22 @@ public static class LocationEndpoints
                 .ToList();
 
             return Results.Ok(response);
-        });
+        })
+        .WithTags("Locations")
+        .WithName("GetCounties")
+        .WithSummary("List all Kenya counties")
+        .WithDescription("Returns the 47 counties in alphabetical order.")
+        .Produces<List<CountyResponse>>(StatusCodes.Status200OK);
 
         app.MapGet("/api/v1/locations/search", async (
-            string? q,
-            int? level,
-            int? limit,
+            [Description("Optional text used to search by name.")]
+            [FromQuery(Name = "q")] string? q,
+
+            [Description("Administrative level: 1 = county, 2 = sub-county, 3 = ward.")]
+            [FromQuery(Name = "level")] int? level,
+
+            [Description("Maximum number of results to return. Default: 20. Valid range: 1 to 100.")]
+            [FromQuery(Name = "limit")] int? limit,
             NpgsqlDataSource db) =>
         {
             var take = Math.Clamp(limit ?? 20, 1, 100);
@@ -114,9 +126,16 @@ public static class LocationEndpoints
                 .ToList();
 
             return Results.Ok(response);
-        });
+        })
+        .WithTags("Locations")
+        .WithName("SearchLocations")
+        .WithSummary("Search Kenya administrative locations")
+        .WithDescription("Searches counties, sub-counties, and wards by name or administrative level.")
+        .Produces<List<LocationSearchResponse>>(StatusCodes.Status200OK)
+        .Produces<ApiError>(StatusCodes.Status400BadRequest);
 
         app.MapGet("/api/v1/locations/{id}", async (
+            [Description("Administrative location identifier.")]
             string id,
             NpgsqlDataSource db) =>
         {
@@ -182,9 +201,16 @@ public static class LocationEndpoints
                 SourceVersion: (string)row["source_version"]!);
 
             return Results.Ok(response);
-        });
+        })
+        .WithTags("Locations")
+        .WithName("GetLocation")
+        .WithSummary("Get an administrative location")
+        .WithDescription("Returns details for a county, sub-county, or ward by its identifier.")
+        .Produces<LocationDetailResponse>(StatusCodes.Status200OK)
+        .Produces<ApiNotFoundError>(StatusCodes.Status404NotFound);
 
         app.MapGet("/api/v1/locations/{id}/hierarchy", async (
+            [Description("Administrative location identifier.")]
             string id,
             NpgsqlDataSource db) =>
         {
@@ -259,13 +285,27 @@ public static class LocationEndpoints
                 .ToList();
 
             return Results.Ok(response);
-        });
+        })
+        .WithTags("Locations")
+        .WithName("GetLocationHierarchy")
+        .WithSummary("Get the administrative hierarchy")
+        .WithDescription("Returns the county-to-ward hierarchy containing the requested administrative location.")
+        .Produces<List<LocationHierarchyItemResponse>>(StatusCodes.Status200OK)
+        .Produces<ApiError>(StatusCodes.Status400BadRequest)
+        .Produces<ApiNotFoundError>(StatusCodes.Status404NotFound);
 
         app.MapGet("/api/v1/nearby", async (
-            double latitude,
-            double longitude,
-            double? radiusKm,
-            int? limit,
+            [Description("Latitude in decimal degrees. Valid range: -90 to 90.")]
+            [FromQuery(Name = "latitude")] double latitude,
+
+            [Description("Longitude in decimal degrees. Valid range: -180 to 180.")]
+            [FromQuery(Name = "longitude")] double longitude,
+
+            [Description("Search radius in kilometres. Default: 25. Valid range: 0.1 to 250.")]
+            [FromQuery(Name = "radiusKm")] double? radiusKm,
+
+            [Description("Maximum number of results to return. Default: 20. Valid range: 1 to 100.")]
+            [FromQuery(Name = "limit")] int? limit,
             NpgsqlDataSource db) =>
         {
             if (latitude is < -90 or > 90)
@@ -341,6 +381,12 @@ public static class LocationEndpoints
                 .ToList();
 
             return Results.Ok(response);
-        });
+        })
+        .WithTags("Locations")
+        .WithName("GetNearbyLocations")
+        .WithSummary("Find nearby administrative locations")
+        .WithDescription("Finds administrative locations near a latitude and longitude using a radius in kilometres.")
+        .Produces<List<NearbyLocationResponse>>(StatusCodes.Status200OK)
+        .Produces<ApiError>(StatusCodes.Status400BadRequest);
     }
 }

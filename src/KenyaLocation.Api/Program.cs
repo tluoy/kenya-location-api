@@ -6,7 +6,26 @@ using KenyaLocation.Api.Models;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(options =>
+{
+    options.SwaggerDoc("v1", new Microsoft.OpenApi.OpenApiInfo
+    {
+        Title = "Kenya Location Intelligence API",
+        Version = "v1",
+        Description = "Geospatial API for Kenya administrative boundaries, places, nearby searches, and reverse geolocation."
+    });
+
+    options.SupportNonNullableReferenceTypes();
+    options.NonNullableReferenceTypesAsRequired();
+
+    var xmlFile = $"{System.Reflection.Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+
+    if (File.Exists(xmlPath))
+    {
+        options.IncludeXmlComments(xmlPath);
+    }
+});
 
 builder.Services.AddSingleton(sp =>
 {
@@ -43,7 +62,10 @@ app.MapGet("/health", async (NpgsqlDataSource db) =>
         postgis = reader.GetString(0),
         utc = DateTimeOffset.UtcNow
     });
-});
+})
+.WithTags("Health")
+.WithName("GetHealth")
+.Produces(StatusCodes.Status200OK);
 
 app.MapGet("/api/v1/meta", async (NpgsqlDataSource db) =>
 {
@@ -69,6 +91,11 @@ app.MapGet("/api/v1/meta", async (NpgsqlDataSource db) =>
         Levels: levels);
 
     return Results.Ok(response);
-});
+})
+.WithTags("Meta")
+.WithName("GetMeta")
+.WithSummary("Get API metadata")
+.WithDescription("Returns service metadata and counts for the supported administrative levels.")
+.Produces<MetaResponse>(StatusCodes.Status200OK);
 
 app.Run();

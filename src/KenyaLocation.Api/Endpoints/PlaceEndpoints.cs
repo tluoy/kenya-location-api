@@ -2,6 +2,8 @@ using KenyaLocation.Api.Database;
 using Npgsql;
 using KenyaLocation.Api.Models;
 using System.Text.Json;
+using Microsoft.AspNetCore.Mvc;
+using System.ComponentModel;
 
 namespace KenyaLocation.Api.Endpoints;
 
@@ -10,21 +12,26 @@ public static class PlaceEndpoints
     public static void MapPlaceEndpoints(this WebApplication app)
     {
         app.MapGet("/api/v1/places/search", async (
-            string? q,
-            string? place_type,
-            int? limit,
+            [Description("Optional text used to search by place name.")]
+            [FromQuery(Name = "q")] string? q,
+
+            [Description("Optional place type. Supported values: urban_area, settlement.")]
+            [FromQuery(Name = "placeType")] string? placeType,
+
+            [Description("Maximum number of results to return. Default: 20. Valid range: 1 to 100.")]
+            [FromQuery(Name = "limit")] int? limit,
             NpgsqlDataSource db) =>
         {
             var take = Math.Clamp(limit ?? 20, 1, 100);
 
             var search = q?.Trim() ?? "";
-            var type = place_type?.Trim().ToLowerInvariant();
+            var type = placeType?.Trim().ToLowerInvariant();
 
             if (!string.IsNullOrEmpty(type) &&
                 type is not ("urban_area" or "settlement"))
             {
                 return ApiResults.BadRequest(
-                    "place_type must be 'urban_area' or 'settlement'.",
+                    "placeType must be 'urban_area' or 'settlement'.",
                     "INVALID_PLACE_TYPE"
                 );
             }
@@ -97,9 +104,16 @@ public static class PlaceEndpoints
                 .ToList();
 
             return Results.Ok(response);
-        });
+        })
+        .WithTags("Places")
+        .WithName("SearchPlaces")
+        .WithSummary("Search places")
+        .WithDescription("Searches places by name or place type.")
+        .Produces<List<PlaceSearchResponse>>(StatusCodes.Status200OK)
+        .Produces<ApiError>(StatusCodes.Status400BadRequest);
 
         app.MapGet("/api/v1/places/{id}", async (
+            [Description("Place identifier.")]
             string id,
             NpgsqlDataSource db) =>
         {
@@ -163,7 +177,7 @@ public static class PlaceEndpoints
                 PlaceType: (string)row["place_type"]!,
                 Latitude: Convert.ToDouble(row["latitude"]),
                 Longitude: Convert.ToDouble(row["longitude"]),
-                Geometry: geometry!,
+                Geometry: (JsonElement)geometry!,
                 WardId: row["ward_id"] as string,
                 Ward: row["ward"] as string,
                 SubCountyId: row["sub_county_id"] as string,
@@ -175,13 +189,26 @@ public static class PlaceEndpoints
                 SourceVersion: (string)row["source_version"]!);
 
             return Results.Ok(response);
-        });
+        })
+        .WithTags("Places")
+        .WithName("GetPlace")
+        .WithSummary("Get a place")
+        .WithDescription("Returns detailed information and GeoJSON geometry for a place.")
+        .Produces<PlaceDetailResponse>(StatusCodes.Status200OK)
+        .Produces<ApiNotFoundError>(StatusCodes.Status404NotFound);
 
         app.MapGet("/api/v1/places/nearby", async (
-            double latitude,
-            double longitude,
-            double? radius_km,
-            int? limit,
+            [Description("Latitude in decimal degrees. Valid range: -90 to 90.")]
+            [FromQuery(Name = "latitude")] double latitude,
+
+            [Description("Longitude in decimal degrees. Valid range: -180 to 180.")]
+            [FromQuery(Name = "longitude")] double longitude,
+
+            [Description("Search radius in kilometres. Default: 25. Valid range: 0.1 to 500.")]
+            [FromQuery(Name = "radiusKm")] double? radiusKm,
+
+            [Description("Maximum number of results to return. Default: 20. Valid range: 1 to 100.")]
+            [FromQuery(Name = "limit")] int? limit,
             NpgsqlDataSource db) =>
         {
             if (latitude is < -90 or > 90)
@@ -198,8 +225,8 @@ public static class PlaceEndpoints
                     "INVALID_LONGITUDE");
             }
 
-            var radiusKm = Math.Clamp(
-                radius_km ?? 25,
+            var searchRadiusKm = Math.Clamp(
+                radiusKm ?? 25,
                 0.1,
                 500);
 
@@ -257,7 +284,7 @@ public static class PlaceEndpoints
             var radiusParameter =
                 new NpgsqlParameter<double>(
                     "radius_meters",
-                    radiusKm * 1000);
+                    searchRadiusKm * 1000);
 
             var limitParameter =
                 new NpgsqlParameter<int>("limit", take);
@@ -284,6 +311,12 @@ public static class PlaceEndpoints
                 .ToList();
 
             return Results.Ok(response);
-        });
+        })
+        .WithTags("Places")
+        .WithName("GetNearbyPlaces")
+        .WithSummary("Find nearby places")
+        .WithDescription("Finds places near a latitude and longitude using a radius in kilometres.")
+        .Produces<List<NearbyPlaceResponse>>(StatusCodes.Status200OK)
+        .Produces<ApiError>(StatusCodes.Status400BadRequest);
     }
 }

@@ -24,7 +24,7 @@ public class LocationTests : IntegrationTestBase
     }
 
     [Fact]
-    public async Task GetUnknownLocation_ReturnsNotFound()
+    public async Task GetUnknownLocation_ReturnsNotFoundWithExpectedError()
     {
         const string unknownId = "KE-L3-does-not-exist";
 
@@ -32,5 +32,17 @@ public class LocationTests : IntegrationTestBase
             $"/api/v1/locations/{unknownId}");
 
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+
+        var json = await response.Content.ReadAsStringAsync();
+
+        using var document = JsonDocument.Parse(json);
+
+        Assert.Equal(
+            "Location not found.",
+            document.RootElement.GetProperty("error").GetString());
+
+        Assert.Equal(
+            unknownId,
+            document.RootElement.GetProperty("id").GetString());
     }
 }

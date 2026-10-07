@@ -14,7 +14,7 @@ DB = os.getenv("DATABASE_URL")
 if not DB:
     raise RuntimeError("DATABASE_URL is not configured.")
 
-SOURCE_ZIP = Path("/data/places/13308773.zip")
+SOURCE_ZIP = Path(os.getenv("PLACES_SOURCE_ZIP", "/data/places/13308773.zip"))
 SOURCE = "Kenya Urban Centres 2019"
 SOURCE_VERSION = "13308773"
 

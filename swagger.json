@@ -1,0 +1,1137 @@
+{
+  "openapi": "3.0.4",
+  "info": {
+    "title": "Kenya Location Intelligence API",
+    "description": "Geospatial API for Kenya administrative boundaries, places, nearby searches, and reverse geolocation.",
+    "version": "v1"
+  },
+  "paths": {
+    "/api/v1/geolocation/reverse": {
+      "get": {
+        "tags": [
+          "Geolocation"
+        ],
+        "summary": "Reverse geocode coordinates",
+        "description": "Returns the Kenya county, sub-county, ward, and places containing the supplied coordinates.",
+        "operationId": "ReverseGeolocation",
+        "parameters": [
+          {
+            "name": "latitude",
+            "in": "query",
+            "description": "Latitude in decimal degrees. Valid range: -90 to 90.",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "description": "Latitude in decimal degrees. Valid range: -90 to 90.",
+              "format": "double"
+            }
+          },
+          {
+            "name": "longitude",
+            "in": "query",
+            "description": "Longitude in decimal degrees. Valid range: -180 to 180.",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "description": "Longitude in decimal degrees. Valid range: -180 to 180.",
+              "format": "double"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReverseGeolocationResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "tags": [
+          "Health"
+        ],
+        "operationId": "GetHealth",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/locations/counties": {
+      "get": {
+        "tags": [
+          "Locations"
+        ],
+        "summary": "List all Kenya counties",
+        "description": "Returns the 47 counties in alphabetical order.",
+        "operationId": "GetCounties",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CountyResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/locations/search": {
+      "get": {
+        "tags": [
+          "Locations"
+        ],
+        "summary": "Search Kenya administrative locations",
+        "description": "Searches counties, sub-counties, and wards by name or administrative level.",
+        "operationId": "SearchLocations",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "description": "Optional text used to search by name.",
+            "schema": {
+              "type": "string",
+              "description": "Optional text used to search by name."
+            }
+          },
+          {
+            "name": "level",
+            "in": "query",
+            "description": "Administrative level: 1 = county, 2 = sub-county, 3 = ward.",
+            "schema": {
+              "type": "integer",
+              "description": "Administrative level: 1 = county, 2 = sub-county, 3 = ward.",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Maximum number of results to return. Default: 20. Valid range: 1 to 100.",
+            "schema": {
+              "type": "integer",
+              "description": "Maximum number of results to return. Default: 20. Valid range: 1 to 100.",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/LocationSearchResponse"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/locations/{id}": {
+      "get": {
+        "tags": [
+          "Locations"
+        ],
+        "summary": "Get an administrative location",
+        "description": "Returns details for a county, sub-county, or ward by its identifier.",
+        "operationId": "GetLocation",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Administrative location identifier.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Administrative location identifier."
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LocationDetailResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiNotFoundError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/locations/{id}/hierarchy": {
+      "get": {
+        "tags": [
+          "Locations"
+        ],
+        "summary": "Get the administrative hierarchy",
+        "description": "Returns the county-to-ward hierarchy containing the requested administrative location.",
+        "operationId": "GetLocationHierarchy",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Administrative location identifier.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Administrative location identifier."
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/LocationHierarchyItemResponse"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiNotFoundError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/nearby": {
+      "get": {
+        "tags": [
+          "Locations"
+        ],
+        "summary": "Find nearby administrative locations",
+        "description": "Finds administrative locations near a latitude and longitude using a radius in kilometres.",
+        "operationId": "GetNearbyLocations",
+        "parameters": [
+          {
+            "name": "latitude",
+            "in": "query",
+            "description": "Latitude in decimal degrees. Valid range: -90 to 90.",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "description": "Latitude in decimal degrees. Valid range: -90 to 90.",
+              "format": "double"
+            }
+          },
+          {
+            "name": "longitude",
+            "in": "query",
+            "description": "Longitude in decimal degrees. Valid range: -180 to 180.",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "description": "Longitude in decimal degrees. Valid range: -180 to 180.",
+              "format": "double"
+            }
+          },
+          {
+            "name": "radiusKm",
+            "in": "query",
+            "description": "Search radius in kilometres. Default: 25. Valid range: 0.1 to 250.",
+            "schema": {
+              "type": "number",
+              "description": "Search radius in kilometres. Default: 25. Valid range: 0.1 to 250.",
+              "format": "double"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Maximum number of results to return. Default: 20. Valid range: 1 to 100.",
+            "schema": {
+              "type": "integer",
+              "description": "Maximum number of results to return. Default: 20. Valid range: 1 to 100.",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/NearbyLocationResponse"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/meta": {
+      "get": {
+        "tags": [
+          "Meta"
+        ],
+        "summary": "Get API metadata",
+        "description": "Returns service metadata and counts for the supported administrative levels.",
+        "operationId": "GetMeta",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MetaResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/places/search": {
+      "get": {
+        "tags": [
+          "Places"
+        ],
+        "summary": "Search places",
+        "description": "Searches places by name or place type.",
+        "operationId": "SearchPlaces",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "description": "Optional text used to search by place name.",
+            "schema": {
+              "type": "string",
+              "description": "Optional text used to search by place name."
+            }
+          },
+          {
+            "name": "placeType",
+            "in": "query",
+            "description": "Optional place type. Supported values: urban_area, settlement.",
+            "schema": {
+              "type": "string",
+              "description": "Optional place type. Supported values: urban_area, settlement."
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Maximum number of results to return. Default: 20. Valid range: 1 to 100.",
+            "schema": {
+              "type": "integer",
+              "description": "Maximum number of results to return. Default: 20. Valid range: 1 to 100.",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PlaceSearchResponse"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/places/{id}": {
+      "get": {
+        "tags": [
+          "Places"
+        ],
+        "summary": "Get a place",
+        "description": "Returns detailed information and GeoJSON geometry for a place.",
+        "operationId": "GetPlace",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Place identifier.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Place identifier."
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlaceDetailResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiNotFoundError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/places/nearby": {
+      "get": {
+        "tags": [
+          "Places"
+        ],
+        "summary": "Find nearby places",
+        "description": "Finds places near a latitude and longitude using a radius in kilometres.",
+        "operationId": "GetNearbyPlaces",
+        "parameters": [
+          {
+            "name": "latitude",
+            "in": "query",
+            "description": "Latitude in decimal degrees. Valid range: -90 to 90.",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "description": "Latitude in decimal degrees. Valid range: -90 to 90.",
+              "format": "double"
+            }
+          },
+          {
+            "name": "longitude",
+            "in": "query",
+            "description": "Longitude in decimal degrees. Valid range: -180 to 180.",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "description": "Longitude in decimal degrees. Valid range: -180 to 180.",
+              "format": "double"
+            }
+          },
+          {
+            "name": "radiusKm",
+            "in": "query",
+            "description": "Search radius in kilometres. Default: 25. Valid range: 0.1 to 500.",
+            "schema": {
+              "type": "number",
+              "description": "Search radius in kilometres. Default: 25. Valid range: 0.1 to 500.",
+              "format": "double"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Maximum number of results to return. Default: 20. Valid range: 1 to 100.",
+            "schema": {
+              "type": "integer",
+              "description": "Maximum number of results to return. Default: 20. Valid range: 1 to 100.",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/NearbyPlaceResponse"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ApiError": {
+        "required": [
+          "error"
+        ],
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "ApiNotFoundError": {
+        "required": [
+          "error",
+          "id"
+        ],
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "CountyResponse": {
+        "required": [
+          "code",
+          "id",
+          "latitude",
+          "longitude",
+          "name"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "latitude": {
+            "type": "number",
+            "format": "double"
+          },
+          "longitude": {
+            "type": "number",
+            "format": "double"
+          }
+        },
+        "additionalProperties": false
+      },
+      "LocationDetailResponse": {
+        "required": [
+          "code",
+          "id",
+          "latitude",
+          "level",
+          "levelName",
+          "longitude",
+          "name",
+          "source",
+          "sourceVersion"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "level": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "levelName": {
+            "type": "string"
+          },
+          "parent": {
+            "$ref": "#/components/schemas/LocationParentResponse"
+          },
+          "latitude": {
+            "type": "number",
+            "format": "double"
+          },
+          "longitude": {
+            "type": "number",
+            "format": "double"
+          },
+          "source": {
+            "type": "string"
+          },
+          "sourceVersion": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "LocationHierarchyItemResponse": {
+        "required": [
+          "code",
+          "depth",
+          "id",
+          "level",
+          "levelName",
+          "name"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "level": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "levelName": {
+            "type": "string"
+          },
+          "parentId": {
+            "type": "string",
+            "nullable": true
+          },
+          "depth": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "LocationParentResponse": {
+        "required": [
+          "code",
+          "id",
+          "level",
+          "levelName",
+          "name"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "level": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "levelName": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "LocationSearchResponse": {
+        "required": [
+          "code",
+          "id",
+          "latitude",
+          "level",
+          "levelName",
+          "longitude",
+          "name"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "level": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "levelName": {
+            "type": "string"
+          },
+          "latitude": {
+            "type": "number",
+            "format": "double"
+          },
+          "longitude": {
+            "type": "number",
+            "format": "double"
+          },
+          "parentId": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "MetaLevelResponse": {
+        "required": [
+          "count",
+          "level",
+          "levelName"
+        ],
+        "type": "object",
+        "properties": {
+          "level": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "levelName": {
+            "type": "string"
+          },
+          "count": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "MetaResponse": {
+        "required": [
+          "levels",
+          "service",
+          "version"
+        ],
+        "type": "object",
+        "properties": {
+          "service": {
+            "type": "string"
+          },
+          "version": {
+            "type": "string"
+          },
+          "levels": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MetaLevelResponse"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "NearbyLocationResponse": {
+        "required": [
+          "code",
+          "distanceMeters",
+          "id",
+          "latitude",
+          "level",
+          "levelName",
+          "longitude",
+          "name"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "level": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "levelName": {
+            "type": "string"
+          },
+          "distanceMeters": {
+            "type": "number",
+            "format": "double"
+          },
+          "latitude": {
+            "type": "number",
+            "format": "double"
+          },
+          "longitude": {
+            "type": "number",
+            "format": "double"
+          }
+        },
+        "additionalProperties": false
+      },
+      "NearbyPlaceResponse": {
+        "required": [
+          "distanceMeters",
+          "id",
+          "latitude",
+          "longitude",
+          "name",
+          "placeType"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "placeType": {
+            "type": "string"
+          },
+          "latitude": {
+            "type": "number",
+            "format": "double"
+          },
+          "longitude": {
+            "type": "number",
+            "format": "double"
+          },
+          "distanceMeters": {
+            "type": "number",
+            "format": "double"
+          },
+          "ward": {
+            "type": "string",
+            "nullable": true
+          },
+          "subCounty": {
+            "type": "string",
+            "nullable": true
+          },
+          "county": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "PlaceDetailResponse": {
+        "required": [
+          "geometry",
+          "id",
+          "latitude",
+          "longitude",
+          "name",
+          "placeType",
+          "source",
+          "sourceVersion"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "placeType": {
+            "type": "string"
+          },
+          "latitude": {
+            "type": "number",
+            "format": "double"
+          },
+          "longitude": {
+            "type": "number",
+            "format": "double"
+          },
+          "geometry": { },
+          "wardId": {
+            "type": "string",
+            "nullable": true
+          },
+          "ward": {
+            "type": "string",
+            "nullable": true
+          },
+          "subCountyId": {
+            "type": "string",
+            "nullable": true
+          },
+          "subCounty": {
+            "type": "string",
+            "nullable": true
+          },
+          "countyId": {
+            "type": "string",
+            "nullable": true
+          },
+          "county": {
+            "type": "string",
+            "nullable": true
+          },
+          "adminUnitId": {
+            "type": "string",
+            "nullable": true
+          },
+          "source": {
+            "type": "string"
+          },
+          "sourceVersion": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "PlaceSearchResponse": {
+        "required": [
+          "id",
+          "latitude",
+          "longitude",
+          "name",
+          "placeType"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "placeType": {
+            "type": "string"
+          },
+          "latitude": {
+            "type": "number",
+            "format": "double"
+          },
+          "longitude": {
+            "type": "number",
+            "format": "double"
+          },
+          "ward": {
+            "type": "string",
+            "nullable": true
+          },
+          "subCounty": {
+            "type": "string",
+            "nullable": true
+          },
+          "county": {
+            "type": "string",
+            "nullable": true
+          },
+          "adminUnitId": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "ReverseGeolocationAdminUnitResponse": {
+        "required": [
+          "code",
+          "id",
+          "name"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ReverseGeolocationAdministrativeResponse": {
+        "type": "object",
+        "properties": {
+          "county": {
+            "$ref": "#/components/schemas/ReverseGeolocationAdminUnitResponse"
+          },
+          "subCounty": {
+            "$ref": "#/components/schemas/ReverseGeolocationAdminUnitResponse"
+          },
+          "ward": {
+            "$ref": "#/components/schemas/ReverseGeolocationAdminUnitResponse"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ReverseGeolocationPlaceResponse": {
+        "required": [
+          "id",
+          "name",
+          "type"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ReverseGeolocationResponse": {
+        "required": [
+          "administrative",
+          "latitude",
+          "longitude",
+          "places"
+        ],
+        "type": "object",
+        "properties": {
+          "latitude": {
+            "type": "number",
+            "format": "double"
+          },
+          "longitude": {
+            "type": "number",
+            "format": "double"
+          },
+          "administrative": {
+            "$ref": "#/components/schemas/ReverseGeolocationAdministrativeResponse"
+          },
+          "places": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReverseGeolocationPlaceResponse"
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Geolocation"
+    },
+    {
+      "name": "Health"
+    },
+    {
+      "name": "Locations"
+    },
+    {
+      "name": "Meta"
+    },
+    {
+      "name": "Places"
+    }
+  ]
+}
