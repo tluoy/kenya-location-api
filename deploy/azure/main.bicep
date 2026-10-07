@@ -202,7 +202,10 @@ resource ingestionJob 'Microsoft.App/jobs@2025-01-01' = {
     ingestionBlobReader
   ]
   identity: {
-    type: 'SystemAssigned'
+    type: 'UserAssigned'
+    userAssignedIdentities: {
+      '${ingestionIdentity.id}': {}
+    }
   }
   properties: {
     environmentId: containerAppsEnvironment.id
@@ -219,7 +222,7 @@ resource ingestionJob 'Microsoft.App/jobs@2025-01-01' = {
       secrets: [
         {
           name: 'database-url'
-          value: 'postgresql://${postgresAdminUser}:${postgresAdminPassword}@${postgresHost}:5432/${databaseName}?sslmode=require'
+          value: 'postgresql://${postgresAdminUser}:${uriComponent(postgresAdminPassword)}@${postgresHost}:5432/${databaseName}?sslmode=require'
         }
       ]
     }
