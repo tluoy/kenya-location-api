@@ -112,6 +112,15 @@ kenya-location-api-dev
 
 The API listens on port `8080` and is externally accessible through Azure Container Apps ingress.
 
+```markdown
+External URL:
+```
+
+```text
+https://kenya-location-api-dev.grayforest-93e1dd53.southafricanorth.azurecontainerapps.io/
+
+```
+
 ### Ingestion Job
 
 ```text
@@ -182,7 +191,19 @@ The ingestion Job does not run continuously.
 
 ## Validation
 
-The Azure development environment has been provisioned and the API has been validated. Azure ingestion remains unresolved and is not yet considered end-to-end validated.
+```markdown
+The Azure development infrastructure has been provisioned and the API has been validated independently of the ingestion Job.
+Current status:
+
+* Azure API: validated
+* Azure PostgreSQL/PostGIS: validated
+* Azure Blob source storage: provisioned
+* Azure Container Registry: provisioned
+* Azure ingestion image: built and pushed
+* Azure ingestion Job: unresolved
+* End-to-end Azure ingestion: not yet validated
+
+```
 
 Validated functionality includes:
 
