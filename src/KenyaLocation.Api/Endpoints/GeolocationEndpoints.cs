@@ -1,6 +1,8 @@
 using KenyaLocation.Api.Database;
 using Npgsql;
 using KenyaLocation.Api.Models;
+using Microsoft.AspNetCore.Mvc;
+using System.ComponentModel;
 
 namespace KenyaLocation.Api.Endpoints;
 
@@ -9,8 +11,11 @@ public static class GeolocationEndpoints
     public static void MapGeolocationEndpoints(this WebApplication app)
     {
         app.MapGet("/api/v1/geolocation/reverse", async (
-            double latitude,
-            double longitude,
+            [Description("Latitude in decimal degrees. Valid range: -90 to 90.")]
+            [FromQuery(Name = "latitude")] double latitude,
+
+            [Description("Longitude in decimal degrees. Valid range: -180 to 180.")]
+            [FromQuery(Name = "longitude")] double longitude,
             NpgsqlDataSource db) =>
         {
             if (latitude is < -90 or > 90)
@@ -154,6 +159,12 @@ public static class GeolocationEndpoints
                         .ToList());
 
             return Results.Ok(response);
-        });
+        })
+        .WithTags("Geolocation")
+        .WithName("ReverseGeolocation")
+        .WithSummary("Reverse geocode coordinates")
+        .WithDescription("Returns the Kenya county, sub-county, ward, and places containing the supplied coordinates.")
+        .Produces<ReverseGeolocationResponse>(StatusCodes.Status200OK)
+        .Produces<ApiError>(StatusCodes.Status400BadRequest);
     }
 }

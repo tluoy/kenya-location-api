@@ -41,4 +41,20 @@ public class PlaceSearchTests : IntegrationTestBase
         Assert.True(
             kakamega.TryGetProperty("longitude", out _));
     }
+
+    [Fact]
+    public async Task Search_UnknownPlace_ReturnsEmptyArray()
+    {
+        var response = await Client.GetAsync(
+            "/api/v1/places/search?q=THIS_PLACE_DOES_NOT_EXIST");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        var json = await response.Content.ReadAsStringAsync();
+
+        using var document = JsonDocument.Parse(json);
+
+        Assert.Equal(JsonValueKind.Array, document.RootElement.ValueKind);
+        Assert.Empty(document.RootElement.EnumerateArray());
+    }
 }
