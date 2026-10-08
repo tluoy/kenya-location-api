@@ -202,7 +202,10 @@ resource ingestionJob 'Microsoft.App/jobs@2025-01-01' = {
     ingestionBlobReader
   ]
   identity: {
-    type: 'SystemAssigned'
+    type: 'UserAssigned'
+    userAssignedIdentities: {
+      '${ingestionIdentity.id}': {}
+    }
   }
   properties: {
     environmentId: containerAppsEnvironment.id
@@ -214,12 +217,16 @@ resource ingestionJob 'Microsoft.App/jobs@2025-01-01' = {
       }
       replicaRetryLimit: 1
       replicaTimeout: 1800
-      // Registry authentication is configured after the Job is created.
-      // This avoids revision provisioning timeout during initial creation.
+      registries: [
+        {
+          server: containerRegistry.properties.loginServer
+          identity: ingestionIdentity.id
+        }
+      ]
       secrets: [
         {
           name: 'database-url'
-          value: 'postgresql://${postgresAdminUser}:${postgresAdminPassword}@${postgresHost}:5432/${databaseName}?sslmode=require'
+          value: 'postgresql://${postgresAdminUser}:${uriComponent(postgresAdminPassword)}@${postgresHost}:5432/${databaseName}?sslmode=require'
         }
       ]
     }
@@ -244,6 +251,10 @@ resource ingestionJob 'Microsoft.App/jobs@2025-01-01' = {
             {
               name: 'AZURE_STORAGE_CONTAINER'
               value: 'source-data'
+            }
+            {
+              name: 'AZURE_CLIENT_ID'
+              value: ingestionIdentity.properties.clientId
             }
             {
               name: 'DATABASE_URL'
