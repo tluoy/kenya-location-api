@@ -38,6 +38,8 @@ services:
       dockerfile: ./src/KenyaLocation.Api/Dockerfile
     environment:
       ConnectionStrings__Postgres: Host=db;Port=5432;Database=kenya_location;Username=location;Password=${POSTGRES_PASSWORD}
+      RateLimiting__PermitLimit: ${RATE_LIMIT_PERMIT_LIMIT:-60}
+      RateLimiting__WindowSeconds: ${RATE_LIMIT_WINDOW_SECONDS:-60}
     ports:
       - "8080:8080"
     depends_on:

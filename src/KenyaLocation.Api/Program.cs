@@ -2,8 +2,42 @@ using Npgsql;
 using KenyaLocation.Api.Endpoints;
 using KenyaLocation.Api.Database;
 using KenyaLocation.Api.Models;
+using Microsoft.AspNetCore.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
+
+
+var permitLimit = builder.Configuration.GetValue<int?>(
+    "RateLimiting:PermitLimit") ?? 60;
+
+var windowSeconds = builder.Configuration.GetValue<int?>(
+    "RateLimiting:WindowSeconds") ?? 60;
+
+if (permitLimit <= 0)
+{
+    throw new InvalidOperationException(
+        "RateLimiting:PermitLimit must be greater than zero.");
+}
+
+if (windowSeconds <= 0)
+{
+    throw new InvalidOperationException(
+        "RateLimiting:WindowSeconds must be greater than zero.");
+}
+
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+
+    options.AddFixedWindowLimiter("api", limiterOptions =>
+    {
+        limiterOptions.PermitLimit = permitLimit;
+        limiterOptions.Window = TimeSpan.FromSeconds(windowSeconds);
+        limiterOptions.QueueLimit = 0;
+        limiterOptions.AutoReplenishment = true;
+    });
+});
+
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
@@ -40,6 +74,8 @@ builder.Services.AddSingleton(sp =>
 });
 
 var app = builder.Build();
+
+app.UseRateLimiter();
 
 app.MapLocationEndpoints();
 app.MapPlaceEndpoints();
