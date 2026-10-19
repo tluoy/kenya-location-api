@@ -42,12 +42,27 @@ builder.Services.AddRateLimiter(options =>
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
+
     options.SwaggerDoc("v1", new Microsoft.OpenApi.OpenApiInfo
     {
         Title = "Kenya Location Intelligence API",
         Version = "v1",
-        Description = "Geospatial API for Kenya administrative boundaries, places, nearby searches, and reverse geolocation."
+        Description = """
+        A geospatial API for applications operating in Kenya.
+
+        Capabilities:
+        - Browse counties, sub-counties, and wards.
+        - Search administrative locations and urban areas.
+        - Retrieve location and place details.
+        - Find nearby locations and places using geographic coordinates.
+        - Reverse geolocate coordinates to administrative areas.
+        - Inspect service health and administrative data coverage.
+
+        The v1 value identifies the API contract version.
+        The service release version is reported separately by /api/v1/meta.
+        """
     });
+
 
     options.SupportNonNullableReferenceTypes();
     options.NonNullableReferenceTypesAsRequired();
@@ -126,7 +141,10 @@ app.MapGet("/health/live", () =>
 })
 .WithTags("Health")
 .WithName("GetLiveness")
-.Produces(StatusCodes.Status200OK);
+.Produces(StatusCodes.Status200OK)
+.WithSummary("Check API liveness")
+.WithDescription(
+    "Returns HTTP 200 when the API process can respond to requests.");
 
 app.MapGet("/health/ready", async (NpgsqlDataSource db) =>
 {
@@ -160,7 +178,11 @@ app.MapGet("/health/ready", async (NpgsqlDataSource db) =>
 .WithTags("Health")
 .WithName("GetReadiness")
 .Produces(StatusCodes.Status200OK)
-.Produces(StatusCodes.Status503ServiceUnavailable);
+.Produces(StatusCodes.Status503ServiceUnavailable)
+.WithSummary("Check API readiness")
+.WithDescription(
+    "Checks database connectivity and PostGIS availability. " +
+    "Returns HTTP 503 when the readiness check fails.");
 
 app.MapGet("/health", async (NpgsqlDataSource db) =>
 {
@@ -177,7 +199,10 @@ app.MapGet("/health", async (NpgsqlDataSource db) =>
 })
 .WithTags("Health")
 .WithName("GetHealth")
-.Produces(StatusCodes.Status200OK);
+.Produces(StatusCodes.Status200OK)
+.WithSummary("Check API and database health")
+.WithDescription(
+    "Returns the legacy health response, including the PostGIS version.");
 
 app.MapGet("/api/v1/meta", async (NpgsqlDataSource db) =>
 {
