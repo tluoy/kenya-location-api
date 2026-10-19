@@ -29,10 +29,11 @@ jobs:
       id-token: write
 
     steps:
+      
       - name: Check out release
         uses: actions/checkout@v5
         with:
-          ref: ${{ github.ref }}
+          ref: ${{ github.sha }}
           persist-credentials: false
 
       - name: Validate release tag
@@ -46,6 +47,26 @@ jobs:
           fi
 
           echo "Preparing release $RELEASE_TAG"
+
+      - name: Verify release tag has not moved
+        shell: bash
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+          EXPECTED_SHA: ${{ github.sha }}
+        run: |
+          git fetch --force origin \
+            "refs/tags/${RELEASE_TAG}:refs/tags/${RELEASE_TAG}"
+
+          TAG_SHA="$(git rev-parse "${RELEASE_TAG}^{commit}")"
+
+          if [[ "$TAG_SHA" != "$EXPECTED_SHA" ]]; then
+            echo "Release tag moved or does not match the tested commit."
+            echo "Expected: $EXPECTED_SHA"
+            echo "Actual:   $TAG_SHA"
+            exit 1
+          fi
+
+          echo "Release tag verified at $TAG_SHA"
 
       - name: Sign in to Azure using OIDC
         uses: azure/login@v2
