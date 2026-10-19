@@ -75,6 +75,36 @@ builder.Services.AddSingleton(sp =>
 
 var app = builder.Build();
 
+app.UseExceptionHandler(errorApp =>
+{
+    errorApp.Run(async context =>
+    {
+        var logger = context.RequestServices.GetRequiredService<ILogger<Program>>();
+
+        var exception = context.Features.Get<Microsoft.AspNetCore.Diagnostics.IExceptionHandlerFeature>()?.Error;
+
+        logger.LogError(
+            exception,
+            "Unhandled exception processing {Method} {Path}. TraceId: {TraceId}",
+            context.Request.Method,
+            context.Request.Path,
+            context.TraceIdentifier
+            );
+
+        context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+        context.Response.ContentType = "application/json";
+
+        await context.Response.WriteAsJsonAsync(new
+        {
+            error = new
+            {
+                code = "INTERNAL_SERVER_ERROR",
+                message = "An unexpected error occurred."
+            }
+        });
+    });
+});
+
 app.UseRateLimiter();
 
 app.MapLocationEndpoints();
@@ -85,6 +115,52 @@ app.UseDefaultFiles();
 app.UseStaticFiles();
 app.UseSwagger();
 app.UseSwaggerUI();
+
+app.MapGet("/health/live", () =>
+{
+    return Results.Ok(new
+    {
+        status = "alive",
+        utc = DateTimeOffset.UtcNow
+    });
+})
+.WithTags("Health")
+.WithName("GetLiveness")
+.Produces(StatusCodes.Status200OK);
+
+app.MapGet("/health/ready", async (NpgsqlDataSource db) =>
+{
+    try
+    {
+        await using var cmd = db.CreateCommand("SELECT PostGIS_Version()");
+
+        var version = await cmd.ExecuteScalarAsync();
+
+        if (version is null || version is DBNull)
+        {
+            return Results.StatusCode(StatusCodes.Status503ServiceUnavailable);
+        }
+
+        return Results.Ok(new
+        {
+            status = "ready",
+            postgis = Convert.ToString(version),
+            utc = DateTimeOffset.UtcNow
+        });
+    }
+    catch (NpgsqlException)
+    {
+        return Results.StatusCode(StatusCodes.Status503ServiceUnavailable);
+    }
+    catch (TimeoutException)
+    {
+        return Results.StatusCode(StatusCodes.Status503ServiceUnavailable);
+    }
+})
+.WithTags("Health")
+.WithName("GetReadiness")
+.Produces(StatusCodes.Status200OK)
+.Produces(StatusCodes.Status503ServiceUnavailable);
 
 app.MapGet("/health", async (NpgsqlDataSource db) =>
 {
