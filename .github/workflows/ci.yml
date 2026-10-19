@@ -6,6 +6,9 @@ on:
       - develop
       - main
 
+    tags:
+      - 'v*'
+
   pull_request:
     branches:
       - develop
