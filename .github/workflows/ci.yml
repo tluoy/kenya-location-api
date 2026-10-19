@@ -10,7 +10,7 @@ on:
     branches:
       - develop
       - main
-      
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -24,7 +24,7 @@ jobs:
       - name: Download urban areas dataset
         run: |
           mkdir -p data/places
-          curl -L https://api.figshare.com/v2/articles/13308773/download -o data/places/13308773.zip
+          curl --fail --location --retry 3 https://api.figshare.com/v2/articles/13308773/download --output data/places/13308773.zip
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v5
@@ -45,28 +45,74 @@ jobs:
       - name: Build ingestion Docker image
         run: docker build -t kenya-location-ingestion:ci ./ingestion
 
-      - name: Start application stack
-        run: docker compose up -d
+      - name: Start application stack with test rate limit
+        run: docker compose up -d --build
         env:
           POSTGRES_PASSWORD: ci-test-password
+          RATE_LIMIT_PERMIT_LIMIT: "2"
+          RATE_LIMIT_WINDOW_SECONDS: "60"
 
       - name: Wait for API
         run: |
           for attempt in {1..30}; do
             if curl --fail --silent --output /dev/null --max-time 2 http://localhost:8080/health; then
+              echo "API is healthy."
               exit 0
             fi
-            sleep 1
+            sleep 2
           done
-          echo "API did not become healthy after 30 attempts" >&2
+
+          echo "API did not become healthy after 60 seconds." >&2
+          docker compose logs api
           exit 1
+
+      - name: Check application logs on failure
+        if: failure()
+        run: docker compose logs api db ingestion
+
+      - name: Run rate-limiting integration test
+        run: |
+          dotnet test tests/KenyaLocation.Api.IntegrationTests/KenyaLocation.Api.IntegrationTests.csproj \
+            --configuration Release \
+            --no-restore \
+            --filter "FullyQualifiedName~RateLimitingTests"
+        env:
+          API_BASE_URL: http://localhost:8080
+
+      - name: Restart API with normal rate limit
+        run: docker compose up -d --force-recreate api
+        env:
+          POSTGRES_PASSWORD: ci-test-password
+          RATE_LIMIT_PERMIT_LIMIT: "60"
+          RATE_LIMIT_WINDOW_SECONDS: "60"
+
+      - name: Wait for API after restoring normal rate limit
+        run: |
+          for attempt in {1..30}; do
+            if curl --fail --silent --output /dev/null --max-time 2 http://localhost:8080/health; then
+              echo "API is healthy with the normal rate limit."
+              exit 0
+            fi
+            sleep 2
+          done
+
+          echo "API did not become healthy after restoring the normal rate limit." >&2
+          docker compose logs api
+          exit 1
+
+      - name: Run remaining integration tests
+        run: |
+          dotnet test tests/KenyaLocation.Api.IntegrationTests/KenyaLocation.Api.IntegrationTests.csproj \
+            --configuration Release \
+            --no-restore \
+            --filter "FullyQualifiedName!~RateLimitingTests"
+        env:
+          API_BASE_URL: http://localhost:8080
 
       - name: Check ingestion service logs
         if: failure()
         run: docker compose logs ingestion
 
-      - name: Run integration tests
-        run: dotnet test tests/KenyaLocation.Api.IntegrationTests/KenyaLocation.Api.IntegrationTests.csproj --configuration Release --no-restore
-        env:
-          API_BASE_URL: http://localhost:8080
-
+      - name: Stop application stack
+        if: always()
+        run: docker compose down -v
