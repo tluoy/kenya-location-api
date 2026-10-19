@@ -165,6 +165,7 @@ public static class GeolocationEndpoints
         .WithSummary("Reverse geocode coordinates")
         .WithDescription("Returns the Kenya county, sub-county, ward, and places containing the supplied coordinates.")
         .Produces<ReverseGeolocationResponse>(StatusCodes.Status200OK)
-        .Produces<ApiError>(StatusCodes.Status400BadRequest);
+        .Produces<ApiError>(StatusCodes.Status400BadRequest)
+        .RequireRateLimiting("api");
     }
 }

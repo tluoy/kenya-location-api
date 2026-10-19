@@ -110,7 +110,8 @@ public static class PlaceEndpoints
         .WithSummary("Search places")
         .WithDescription("Searches places by name or place type.")
         .Produces<List<PlaceSearchResponse>>(StatusCodes.Status200OK)
-        .Produces<ApiError>(StatusCodes.Status400BadRequest);
+        .Produces<ApiError>(StatusCodes.Status400BadRequest)
+        .RequireRateLimiting("api");
 
         app.MapGet("/api/v1/places/{id}", async (
             [Description("Place identifier.")]
@@ -195,7 +196,8 @@ public static class PlaceEndpoints
         .WithSummary("Get a place")
         .WithDescription("Returns detailed information and GeoJSON geometry for a place.")
         .Produces<PlaceDetailResponse>(StatusCodes.Status200OK)
-        .Produces<ApiNotFoundError>(StatusCodes.Status404NotFound);
+        .Produces<ApiNotFoundError>(StatusCodes.Status404NotFound)
+        .RequireRateLimiting("api");
 
         app.MapGet("/api/v1/places/nearby", async (
             [Description("Latitude in decimal degrees. Valid range: -90 to 90.")]
@@ -317,6 +319,7 @@ public static class PlaceEndpoints
         .WithSummary("Find nearby places")
         .WithDescription("Finds places near a latitude and longitude using a radius in kilometres.")
         .Produces<List<NearbyPlaceResponse>>(StatusCodes.Status200OK)
-        .Produces<ApiError>(StatusCodes.Status400BadRequest);
+        .Produces<ApiError>(StatusCodes.Status400BadRequest)
+        .RequireRateLimiting("api");
     }
 }

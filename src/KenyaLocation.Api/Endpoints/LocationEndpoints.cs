@@ -44,7 +44,8 @@ public static class LocationEndpoints
         .WithName("GetCounties")
         .WithSummary("List all Kenya counties")
         .WithDescription("Returns the 47 counties in alphabetical order.")
-        .Produces<List<CountyResponse>>(StatusCodes.Status200OK);
+        .Produces<List<CountyResponse>>(StatusCodes.Status200OK)
+        .RequireRateLimiting("api");
 
         app.MapGet("/api/v1/locations/search", async (
             [Description("Optional text used to search by name.")]
@@ -132,7 +133,8 @@ public static class LocationEndpoints
         .WithSummary("Search Kenya administrative locations")
         .WithDescription("Searches counties, sub-counties, and wards by name or administrative level.")
         .Produces<List<LocationSearchResponse>>(StatusCodes.Status200OK)
-        .Produces<ApiError>(StatusCodes.Status400BadRequest);
+        .Produces<ApiError>(StatusCodes.Status400BadRequest)
+        .RequireRateLimiting("api");
 
         app.MapGet("/api/v1/locations/{id}", async (
             [Description("Administrative location identifier.")]
@@ -207,7 +209,8 @@ public static class LocationEndpoints
         .WithSummary("Get an administrative location")
         .WithDescription("Returns details for a county, sub-county, or ward by its identifier.")
         .Produces<LocationDetailResponse>(StatusCodes.Status200OK)
-        .Produces<ApiNotFoundError>(StatusCodes.Status404NotFound);
+        .Produces<ApiNotFoundError>(StatusCodes.Status404NotFound)
+        .RequireRateLimiting("api");
 
         app.MapGet("/api/v1/locations/{id}/hierarchy", async (
             [Description("Administrative location identifier.")]
@@ -292,7 +295,8 @@ public static class LocationEndpoints
         .WithDescription("Returns the county-to-ward hierarchy containing the requested administrative location.")
         .Produces<List<LocationHierarchyItemResponse>>(StatusCodes.Status200OK)
         .Produces<ApiError>(StatusCodes.Status400BadRequest)
-        .Produces<ApiNotFoundError>(StatusCodes.Status404NotFound);
+        .Produces<ApiNotFoundError>(StatusCodes.Status404NotFound)
+        .RequireRateLimiting("api");
 
         app.MapGet("/api/v1/nearby", async (
             [Description("Latitude in decimal degrees. Valid range: -90 to 90.")]
@@ -387,6 +391,7 @@ public static class LocationEndpoints
         .WithSummary("Find nearby administrative locations")
         .WithDescription("Finds administrative locations near a latitude and longitude using a radius in kilometres.")
         .Produces<List<NearbyLocationResponse>>(StatusCodes.Status200OK)
-        .Produces<ApiError>(StatusCodes.Status400BadRequest);
+        .Produces<ApiError>(StatusCodes.Status400BadRequest)
+        .RequireRateLimiting("api");
     }
 }
